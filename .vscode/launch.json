@@ -1,0 +1,51 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "pulsar-server-lldb",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/linux-clang/server/pulsar-server",
+            "args": [],
+            "cwd": "${workspaceFolder}/build/linux-clang/server",
+            "preLaunchTask": "pulsar-server-build",
+            "envFile": "${workspaceFolder}/build/linux-clang/server/assets/.env.local"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:pulsar}",
+            "name": "CxxInterop",
+            "program": "${workspaceFolder:pulsar}/.build/debug/CxxInterop",
+            "preLaunchTask": "swift: Build Debug CxxInterop"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:pulsar}",
+            "name": "Debug CxxInterop",
+            "program": "${workspaceFolder:pulsar}/.build/debug/CxxInterop",
+            "preLaunchTask": "swift: Build Debug CxxInterop"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:pulsar}",
+            "name": "Release CxxInterop",
+            "program": "${workspaceFolder:pulsar}/.build/release/CxxInterop",
+            "preLaunchTask": "swift: Build Release CxxInterop"
+        }
+    ]
+}

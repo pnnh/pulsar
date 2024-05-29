@@ -1,0 +1,6 @@
+Checks: >
+    cppcoreguidelines-*,
+    readability-*,
+    -modernize-*,
+    -fuchsia-*'，
+    -llvmlibc-*

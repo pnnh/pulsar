@@ -1,0 +1,15 @@
+.idea/
+build-*
+cmake-build-*
+cmake-build/
+build/
+CMakeLists.txt.user
+install/
+.cache/
+.xmake/
+GTAGS
+GPATH
+GRTAGS
+out
+.build/
+target/

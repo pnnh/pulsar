@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "multiverse",
+  "version": "0.1.0",
+  "dependencies": [
+    {
+      "name": "spdlog",
+      "version>=": "1.9.0"
+    },
+    {
+      "name": "boost",
+      "version>=": "1.84.0"
+    },
+    {
+      "name": "inja",
+      "version>=": "3.4.0"
+    },
+    {
+      "name": "nlohmann-json",
+      "version>=": "3.11.3"
+    },
+    {
+      "name": "cmark",
+      "version>=": "0.30.3"
+    },
+    {
+      "name": "sqlite3",
+      "version>=": "3.45.1"
+    },
+    {
+      "name": "libenvpp",
+      "version>=": "1.4.0"
+    },
+    {
+      "name": "date",
+      "version>=": "3.0.1"
+    },
+    {
+      "name": "libpqxx",
+      "version>=": "7.8.1"
+    },
+    {
+      "name": "folly",
+      "version>=": "2024.01.01.00"
+    },
+    {
+      "name": "workflow",
+      "version>=": "0.10.9"
+    }
+  ],
+  "builtin-baseline": "9de2e978bdfec6bb7852cc1d6ecf375c923c485c",
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "9.1.0"
+    },
+    {
+      "name": "spdlog",
+      "version": "1.10.0"
+    }
+  ]
+}
