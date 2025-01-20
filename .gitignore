@@ -13,3 +13,5 @@ GRTAGS
 out
 .build/
 target/
+.env.*
+config.yaml

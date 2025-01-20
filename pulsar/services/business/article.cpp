@@ -1,10 +1,115 @@
-#include "article.h"
+#include "article.hpp"
 #include "pulsar/services/config/appconfig.h"
 #include <date/date.h>
 #include <quark/models/articles/Article.h>
 #include <quark/types/uuid.h>
 
-MessageService::MessageService()
+#include <iostream>
+#include <pqxx/pqxx>
+
+std::vector<quark::PSArticleModel> pulsar::selectArticles() {
+  std::vector<quark::PSArticleModel> articlesList;
+  auto pqDsn = AppConfig::Default().GetDSN();
+  std::cout << "pqDsn is: " << pqDsn << std::endl;
+  try {
+    pqxx::connection conn(pqDsn);
+    if (conn.is_open()) {
+      std::cout << "Opened database successfully: " << conn.dbname()
+                << std::endl;
+      const char *sqlText =
+          "select uid, title, body, create_time, update_time, owner, "
+          "keywords, description from articles order by update_time desc limit "
+          "100;";
+      pqxx::nontransaction N(conn);
+      pqxx::result R(N.exec(sqlText));
+
+      for (pqxx::result::const_iterator itr = R.begin(); itr != R.end();
+           ++itr) {
+        // std::cout << "Pk = " << itr[0].as<std::string>() << std::endl;
+        // std::cout << "Title = " << itr[1].as<std::string>() << std::endl;
+        auto model = quark::PSArticleModel{
+            //            .title = itr[1].as<std::string>(),
+            //            .body = itr[2].as<std::string>(),
+            //            .create_time =
+            //            quark::makeTimePoint(itr[3].as<std::string>()),
+            //            .update_time =
+            //            quark::makeTimePoint(itr[4].as<std::string>()),
+            //            .creator = itr[5].as<std::string>()
+        };
+        model.Uid = itr[0].as<std::string>();
+        model.Title = itr[1].as<std::string>();
+        model.Body = itr[2].as<std::string>();
+        // if (!itr[6].is_null()) {
+        //   model.Keywords = itr[6].as<std::string>();
+        // }
+        // if (!itr[7].is_null()) {
+        //   model.Description = itr[7].as<std::string>();
+        // }
+
+        articlesList.push_back(model);
+      }
+      std::cout << "Operation done successfully" << std::endl;
+    } else {
+      std::cout << "Can't open database" << std::endl;
+      return articlesList;
+    }
+    // todo
+    // 需要关闭链接，因为构建错误所以暂时注释。不确定是调用disconnect还是close
+    // conn.disconnect();
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+    return articlesList;
+  }
+  return articlesList;
+}
+
+quark::PSArticleModel pulsar::queryArticle(std::string pk) {
+  auto pqDsn = "todo"; // GetConfigItem("DSN");
+  // std::cout << "pqDsn is: " << pqDsn << std::endl;
+
+  pqxx::connection conn(pqDsn);
+  if (conn.is_open()) {
+    std::cout << "Opened database successfully: " << conn.dbname() << std::endl;
+    const char *sqlText =
+        "select pk, title, body, create_time, update_time, creator, "
+        "keywords, description, mark_lang, status, mark_text from articles "
+        "where pk = $1 or uri = $1;";
+    pqxx::nontransaction N(conn);
+    pqxx::result R(N.exec_params(sqlText, pk));
+
+    for (pqxx::result::const_iterator itr = R.begin(); itr != R.end(); ++itr) {
+      std::cout << "Pk = " << itr[0].as<std::string>() << std::endl;
+      std::cout << "Title = " << itr[1].as<std::string>() << std::endl;
+      auto model = quark::PSArticleModel{
+          // .pk = itr[0].as<std::string>(),
+          // .title = itr[1].as<std::string>(),
+          // .body = itr[2].as<std::string>(),
+          // .create_time = quark::makeTimePoint(itr[3].as<std::string>()),
+          // .update_time = quark::makeTimePoint(itr[4].as<std::string>()),
+          // .creator = itr[5].as<std::string>(),
+          // //          .keywords = itr[6].as<std::string>(),
+          // //          .description = itr[7].as<std::string>(),
+          // .mark_lang = itr[8].as<int>(),
+          // .mark_text = itr[10].as<std::string>(),
+          // .status = itr[9].as<int>(),
+      };
+      if (!itr[6].is_null()) {
+        model.Keywords = itr[6].as<std::string>();
+      }
+      if (!itr[7].is_null()) {
+        model.Description = itr[7].as<std::string>();
+      }
+      std::cout << "Operation done successfully" << std::endl;
+      // todo
+      // 需要关闭链接，因为构建错误所以暂时注释。不确定是调用disconnect还是close
+      // conn.disconnect();
+      return model;
+    }
+  }
+  throw std::string{"Can't open database"};
+}
+
+pulsar::MessageService::MessageService()
     : connection(pulsar::AppConfig::Default().GetDSN()) {
   if (!this->connection.is_open()) {
     throw std::runtime_error("Can't open database");
@@ -12,7 +117,7 @@ MessageService::MessageService()
 }
 
 std::optional<std::vector<quark::PSArticleModel>>
-MessageService::selectMessages(int limit) {
+pulsar::MessageService::selectMessages(int limit) {
   std::vector<quark::PSArticleModel> articlesList;
   const char *sqlText = "select uid, nid, title, header, body, keywords, "
                         "description, create_time, update_time "
@@ -38,8 +143,8 @@ MessageService::selectMessages(int limit) {
 }
 
 std::optional<quark::PSArticleModel>
-MessageService::findMessage(const std::optional<std::string> &uid,
-                            const std::optional<long> &nid) {
+pulsar::MessageService::findMessage(const std::optional<std::string> &uid,
+                                    const std::optional<long> &nid) {
   std::string sqlText = "select uid, nid, title, header, body, keywords, "
                         "description, create_time, update_time "
                         "from posts where ";
@@ -75,7 +180,7 @@ MessageService::findMessage(const std::optional<std::string> &uid,
   return std::nullopt;
 }
 
-int MessageService::insertMessage(const quark::PSArticleModel &model) {
+int pulsar::MessageService::insertMessage(const quark::PSArticleModel &model) {
   const char *sqlText =
       "insert into messages (uid, title, content, create_time, update_time, "
       "creator, sender, receiver) "
@@ -84,31 +189,32 @@ int MessageService::insertMessage(const quark::PSArticleModel &model) {
 
   pqxx::work W(this->connection);
   auto createTime = date::format(
-      "%FT%TZ", std::chrono::time_point_cast<std::chrono::microseconds>(model.CreateTime.toTimePoint()));
+      "%FT%TZ", std::chrono::time_point_cast<std::chrono::microseconds>(
+                    model.CreateTime.toTimePoint()));
   auto updateTime = date::format(
-      "%FT%TZ", std::chrono::time_point_cast<std::chrono::microseconds>(model.UpdateTime.toTimePoint()));
-  W.exec_params(sqlText, model.URN, model.Title, model.Body, createTime,
+      "%FT%TZ", std::chrono::time_point_cast<std::chrono::microseconds>(
+                    model.UpdateTime.toTimePoint()));
+  W.exec_params(sqlText, model.Uid, model.Title, model.Body, createTime,
                 updateTime);
   W.commit();
 
   return 0;
 }
 
-int MessageService::updateMessage(const quark::PSArticleModel &model) {
+int pulsar::MessageService::updateMessage(const quark::PSArticleModel &model) {
   const char *sqlText = "update messages set title = $1, content = $2, "
                         "update_time = $3, sender = $4, receiver = $5 "
                         "where uid = $6;";
 
   pqxx::work W(this->connection);
-  W.exec_params(sqlText, model.Title, model.Body,
-                12344443232, model.Title,
-                model.Title, model.URN);
+  W.exec_params(sqlText, model.Title, model.Body, 12344443232, model.Title,
+                model.Title, model.Uid);
   W.commit();
 
   return 0;
 }
 
-int MessageService::deleteMessage(const std::string &uid) {
+int pulsar::MessageService::deleteMessage(const std::string &uid) {
   const char *sqlText = "delete from messages where uid = $1;";
 
   pqxx::work W(this->connection);
@@ -118,7 +224,7 @@ int MessageService::deleteMessage(const std::string &uid) {
   return 0;
 }
 
-long MessageService::count() {
+long pulsar::MessageService::count() {
   const char *sqlText = "select count(*) from messages;";
   pqxx::nontransaction N(this->connection);
   pqxx::result R(N.exec(sqlText));

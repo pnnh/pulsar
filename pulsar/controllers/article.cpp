@@ -2,6 +2,7 @@
 #include "quark/business/articles/article.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <nlohmann/json.hpp>
+#include <pulsar/services/business/article.hpp>
 #include <quark/services/filesystem/filesystem.hpp>
 #include <spdlog/spdlog.h>
 #include <workflow/HttpMessage.h>
@@ -10,120 +11,113 @@
 
 using json = nlohmann::json;
 
-void pulsar::HandleArticleGet(WFHttpTask* httpTask)
-{
-    protocol::HttpRequest* request = httpTask->get_req();
-    protocol::HttpResponse* response = httpTask->get_resp();
+void pulsar::HandleArticleGet(WFHttpTask *httpTask) {
+  protocol::HttpRequest *request = httpTask->get_req();
+  protocol::HttpResponse *response = httpTask->get_resp();
 
-    response->set_http_version("HTTP/1.1");
-    response->add_header_pair("Content-Type", "application/json; charset=utf-8");
-    response->add_header_pair("Access-Control-Allow-Origin", "*");
+  response->set_http_version("HTTP/1.1");
+  response->add_header_pair("Content-Type", "application/json; charset=utf-8");
+  response->add_header_pair("Access-Control-Allow-Origin", "*");
 
-    auto request_uri = request->get_request_uri();
+  auto request_uri = request->get_request_uri();
 
-    quark::MTQueryString queryParam{std::string(request_uri)};
+  quark::MTQueryString queryParam{std::string(request_uri)};
 
-    auto noteURN = queryParam.getString("note");
-    if (!noteURN.has_value())
-    {
-        response->set_status_code("400");
-        return;
-    }
+  auto noteURN = queryParam.getString("note");
+  if (!noteURN.has_value()) {
+    response->set_status_code("400");
+    return;
+  }
 
-    std::ostringstream oss;
-    auto database_path = quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
+  std::ostringstream oss;
+  auto database_path =
+      quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
 
-    auto articleServer = std::make_shared<quark::ArticleSqliteService>(database_path);
-    auto model = articleServer->getArticle(noteURN.value());
-    if (model == nullptr)
-    {
-        response->set_status_code("404");
-        return;
-    }
-    json data = json::object({
-        {"code", 200},
-        {"message", "Hello, World!"},
-        {
-            "data", json::object({
-                {"uid", model->URN},
-                {"title", model->Title},
-                {"header", model->Header},
-                {"body", model->Body},
-                {"keywords", model->Keywords},
-                {"description", model->Description},
-                {"create_time", model->CreateTime.toString()},
-                {"update_time", model->UpdateTime.toString()},
-            })
-        },
-    });
+  auto articleServer =
+      std::make_shared<quark::ArticleSqliteService>(database_path);
+  auto model = articleServer->getArticle(noteURN.value());
+  if (model == nullptr) {
+    response->set_status_code("404");
+    return;
+  }
+  json data = json::object({
+      {"code", 200},
+      {"message", "Hello, World!"},
+      {"data", json::object({
+                   {"uid", model->Uid},
+                   {"title", model->Title},
+                   {"header", model->Header},
+                   {"body", model->Body},
+                   {"keywords", model->Keywords},
+                   {"description", model->Description},
+                   {"create_time", model->CreateTime.toString()},
+                   {"update_time", model->UpdateTime.toString()},
+               })},
+  });
 
-    oss << data;
+  oss << data;
 
-    auto bodyStr = oss.str();
-    auto bodySize = bodyStr.size();
+  auto bodyStr = oss.str();
+  auto bodySize = bodyStr.size();
 
-    response->append_output_body(bodyStr.c_str(), bodySize);
+  response->append_output_body(bodyStr.c_str(), bodySize);
 
-    response->set_status_code("200");
+  response->set_status_code("200");
 }
 
-void pulsar::HandleArticles(WFHttpTask* httpTask)
-{
-    protocol::HttpRequest* request = httpTask->get_req();
-    protocol::HttpResponse* response = httpTask->get_resp();
+void pulsar::HandleArticles(WFHttpTask *httpTask) {
+  protocol::HttpRequest *request = httpTask->get_req();
+  protocol::HttpResponse *response = httpTask->get_resp();
 
-    response->set_http_version("HTTP/1.1");
-    response->add_header_pair("Content-Type", "application/json; charset=utf-8");
-    response->add_header_pair("Access-Control-Allow-Origin", "*");
+  response->set_http_version("HTTP/1.1");
+  response->add_header_pair("Content-Type", "application/json; charset=utf-8");
+  response->add_header_pair("Access-Control-Allow-Origin", "*");
 
-    auto request_uri = request->get_request_uri();
+  auto request_uri = request->get_request_uri();
 
-    quark::MTQueryString queryParam{std::string(request_uri)};
+  quark::MTQueryString queryParam{std::string(request_uri)};
 
-    auto chanURN = queryParam.getString("chan");
+  auto chanURN = queryParam.getString("chan");
 
-    std::ostringstream oss;
+  std::ostringstream oss;
 
-    auto database_path = quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
-    auto articleServer = std::make_shared<quark::ArticleSqliteService>(database_path);
-    auto articlePtr = articleServer->selectArticles(chanURN.value_or(""));
-    json range = json::array();
-    for (const auto& model : *articlePtr)
-    {
-        //quark::Logger::LogInfo({model.URN, model.Title, model.Title});
-        json item = {
-            {"urn", model.URN},
-            {"title", model.Title},
-            {"header", model.Header},
-            {"body", model.Body},
-            {"description", model.Description},
-        };
-        range.push_back(item);
-    }
-    auto count = articlePtr->size();
+  // auto database_path = quark::JoinFilePath({"PROJECT_BINARY_DIR",
+  // "polaris.sqlite"}); auto articleServer =
+  // std::make_shared<quark::ArticleSqliteService>(database_path);
+  auto articlePtr = pulsar::selectArticles();
+  json range = json::array();
+  for (const auto &model : articlePtr) {
+    // quark::Logger::LogInfo({model.URN, model.Title, model.Title});
+    json item = {
+        {"urn", model.Uid},
+        {"title", model.Title},
+        {"header", model.Header},
+        {"body", model.Body},
+        {"description", model.Description},
+    };
+    range.push_back(item);
+  }
+  auto count = articlePtr.size();
 
-    json data = json::object({
-        {"code", 200},
-        {"message", "Hello, World!"},
+  json data = json::object({
+      {"code", 200},
+      {"message", "Hello, World!"},
+      {"data",
+       {{"count", count},
         {
-            "data", {
-                {"count", count},
-                {
-                    "range",
-                    range,
-                }
-            }
-        },
-    });
+            "range",
+            range,
+        }}},
+  });
 
-    oss << data;
+  oss << data;
 
-    auto bodyStr = oss.str();
-    auto bodySize = bodyStr.size();
+  auto bodyStr = oss.str();
+  auto bodySize = bodyStr.size();
 
-    response->append_output_body(bodyStr.c_str(), bodySize);
+  response->append_output_body(bodyStr.c_str(), bodySize);
 
-    response->set_status_code("200");
+  response->set_status_code("200");
 }
 
 // void

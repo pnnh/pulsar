@@ -1,26 +1,22 @@
 #pragma once
 
-#include <memory>
+#include <quark/services/yaml/yaml.h>
 #include <string>
-#include <libenvpp/env.hpp>
 
-namespace pulsar
-{
-    class AppConfig
-    {
-    public:
-        static AppConfig& Default()
-        {
-            static AppConfig instance;
-            return instance;
-        }
+namespace pulsar {
+class AppConfig {
+public:
+  static AppConfig &Default() {
+    static AppConfig instance;
+    return instance;
+  }
 
-        AppConfig();
+  AppConfig();
+  std::string GetDSN();
+  std::string GetSourcePath();
+  std::string GetTargetPath();
 
-        std::string GetDSN();
-
-    private:
-        std::shared_ptr<env::parsed_and_validated_prefix<env::prefix>> parsedEnvPrefixPtr;
-        std::string dnsValue;
-    };
-}
+private:
+  quark::YamlHandler yamlHandler;
+};
+} // namespace pulsar
