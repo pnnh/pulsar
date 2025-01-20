@@ -1,19 +1,19 @@
-#include "server/services/business/article.h"
-#include "common/utils/datetime.h"
-#include "common/utils/uuid.h"
-#include "server/services/config/appconfig.h"
+#include "article.h"
+#include "pulsar/services/config/appconfig.h"
 #include <date/date.h>
-#include <spdlog/spdlog.h>
+#include <quark/models/articles/Article.h>
+#include <quark/types/uuid.h>
 
-MessageService::MessageService() : connection(AppConfig::Default().GetDSN()) {
+MessageService::MessageService()
+    : connection(pulsar::AppConfig::Default().GetDSN()) {
   if (!this->connection.is_open()) {
     throw std::runtime_error("Can't open database");
   }
 }
 
-std::optional<std::vector<ArticleModel>>
+std::optional<std::vector<quark::PSArticleModel>>
 MessageService::selectMessages(int limit) {
-  std::vector<ArticleModel> articlesList;
+  std::vector<quark::PSArticleModel> articlesList;
   const char *sqlText = "select uid, nid, title, header, body, keywords, "
                         "description, create_time, update_time "
                         "from posts order by update_time desc limit $1;";
@@ -21,23 +21,23 @@ MessageService::selectMessages(int limit) {
   pqxx::result R(N.exec_params(sqlText, limit));
 
   for (pqxx::result::const_iterator itr = R.begin(); itr != R.end(); ++itr) {
-    auto model = ArticleModel{
-        .uid = itr[0].as<std::string>(),
-        .nid = itr[1].as<long>(),
-        .title = itr[2].as<std::string>(),
-        .header = itr[3].as<std::string>(),
-        .body = itr[4].as<std::string>(),
-        .keywords = itr[5].as<std::string>(),
-        .description = itr[6].as<std::string>(),
-        .create_time = makeTimePoint(itr[7].as<std::string>()),
-        .update_time = makeTimePoint(itr[8].as<std::string>()),
+    auto model = quark::PSArticleModel{
+        // .uid = itr[0].as<std::string>(),
+        // .nid = itr[1].as<long>(),
+        // .title = itr[2].as<std::string>(),
+        // .header = itr[3].as<std::string>(),
+        // .body = itr[4].as<std::string>(),
+        // .keywords = itr[5].as<std::string>(),
+        // .description = itr[6].as<std::string>(),
+        // .create_time = quark::makeTimePoint(itr[7].as<std::string>()),
+        // .update_time = quark::makeTimePoint(itr[8].as<std::string>()),
     };
     articlesList.push_back(model);
   }
   return articlesList;
 }
 
-std::optional<ArticleModel>
+std::optional<quark::PSArticleModel>
 MessageService::findMessage(const std::optional<std::string> &uid,
                             const std::optional<long> &nid) {
   std::string sqlText = "select uid, nid, title, header, body, keywords, "
@@ -45,7 +45,7 @@ MessageService::findMessage(const std::optional<std::string> &uid,
                         "from posts where ";
 
   std::string pk;
-  if (uid != std::nullopt && UUIDHelper::isUUID(uid.value())) {
+  if (uid != std::nullopt && quark::MTUUID::isUUID(uid.value())) {
     sqlText += " uid = $1;";
     pk = uid.value();
   } else if (nid != std::nullopt) {
@@ -59,23 +59,23 @@ MessageService::findMessage(const std::optional<std::string> &uid,
   pqxx::result R(N.exec_params(sqlText, pk));
 
   for (pqxx::result::const_iterator itr = R.begin(); itr != R.end();) {
-    auto model = ArticleModel{
-        .uid = itr[0].as<std::string>(),
-        .nid = itr[1].as<long>(),
-        .title = itr[2].as<std::string>(),
-        .header = itr[3].as<std::string>(),
-        .body = itr[4].as<std::string>(),
-        .keywords = itr[5].as<std::string>(),
-        .description = itr[6].as<std::string>(),
-        .create_time = makeTimePoint(itr[7].as<std::string>()),
-        .update_time = makeTimePoint(itr[8].as<std::string>()),
+    auto model = quark::PSArticleModel{
+        // .uid = itr[0].as<std::string>(),
+        // .nid = itr[1].as<long>(),
+        // .title = itr[2].as<std::string>(),
+        // .header = itr[3].as<std::string>(),
+        // .body = itr[4].as<std::string>(),
+        // .keywords = itr[5].as<std::string>(),
+        // .description = itr[6].as<std::string>(),
+        // .create_time = makeTimePoint(itr[7].as<std::string>()),
+        // .update_time = makeTimePoint(itr[8].as<std::string>()),
     };
     return model;
   }
   return std::nullopt;
 }
 
-int MessageService::insertMessage(const ArticleModel &model) {
+int MessageService::insertMessage(const quark::PSArticleModel &model) {
   const char *sqlText =
       "insert into messages (uid, title, content, create_time, update_time, "
       "creator, sender, receiver) "
@@ -84,25 +84,25 @@ int MessageService::insertMessage(const ArticleModel &model) {
 
   pqxx::work W(this->connection);
   auto createTime = date::format(
-      "%FT%TZ", time_point_cast<std::chrono::microseconds>(model.create_time));
+      "%FT%TZ", std::chrono::time_point_cast<std::chrono::microseconds>(model.CreateTime.toTimePoint()));
   auto updateTime = date::format(
-      "%FT%TZ", time_point_cast<std::chrono::microseconds>(model.update_time));
-  W.exec_params(sqlText, model.uid, model.title, model.body, createTime,
+      "%FT%TZ", std::chrono::time_point_cast<std::chrono::microseconds>(model.UpdateTime.toTimePoint()));
+  W.exec_params(sqlText, model.URN, model.Title, model.Body, createTime,
                 updateTime);
   W.commit();
 
   return 0;
 }
 
-int MessageService::updateMessage(const ArticleModel &model) {
+int MessageService::updateMessage(const quark::PSArticleModel &model) {
   const char *sqlText = "update messages set title = $1, content = $2, "
                         "update_time = $3, sender = $4, receiver = $5 "
                         "where uid = $6;";
 
   pqxx::work W(this->connection);
-  W.exec_params(sqlText, model.title, model.body,
-                model.update_time.time_since_epoch().count(), model.title,
-                model.title, model.uid);
+  W.exec_params(sqlText, model.Title, model.Body,
+                12344443232, model.Title,
+                model.Title, model.URN);
   W.commit();
 
   return 0;

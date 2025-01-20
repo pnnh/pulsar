@@ -1,6 +1,7 @@
 #include "pulsar/process.h"
 #include <spdlog/spdlog.h>
 #include "services/syncer/syncer.h"
+#include <thread>
 
 int main(int argc, char* argv[])
 {

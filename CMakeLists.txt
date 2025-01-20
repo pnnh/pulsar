@@ -25,7 +25,6 @@ set(APP_NAME MTPulsar)
 
 add_executable(${APP_NAME})
 
-
 file(GLOB_RECURSE APP_SOURCES pulsar/*.cpp quark/*.cpp)
 
 target_sources(${APP_NAME} PUBLIC ${APP_SOURCES})
@@ -37,8 +36,6 @@ target_sources(${APP_NAME}
         FILE_SET CXX_MODULES FILES
         ${APP_MODULES}
 )
-
-
 
 # 查找并引用Boost库
 find_package(Boost COMPONENTS system thread chrono filesystem url REQUIRED)
@@ -82,12 +79,16 @@ target_link_libraries(${APP_NAME} PRIVATE yaml-cpp::yaml-cpp)
 find_package(cmark CONFIG REQUIRED)
 target_link_libraries(${APP_NAME} PRIVATE cmark::cmark)
 
+# 查找并引用PostgreSQL解析库
+find_package(libpqxx CONFIG REQUIRED)
+target_link_libraries(${APP_NAME} PRIVATE libpqxx::pqxx)
+
 # 拷贝资源文件到二进制目录，方便调试
-#file(COPY assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-#
-## 配置安装内容
-#install(TARGETS ${EXE_NAME}
-#        RUNTIME_DEPENDENCY_SET ${EXE_NAME}-dependencies
-#        DESTINATION lib)
-#install(RUNTIME_DEPENDENCY_SET ${EXE_NAME}-dependencies)
+file(COPY assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+# 配置安装内容
+install(TARGETS ${APP_NAME}
+        RUNTIME_DEPENDENCY_SET ${APP_NAME}-dependencies
+        DESTINATION lib)
+install(RUNTIME_DEPENDENCY_SET ${APP_NAME}-dependencies)
  

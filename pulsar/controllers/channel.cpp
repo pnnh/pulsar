@@ -1,13 +1,16 @@
 #include "pulsar/controllers/channel.h"
+#include "quark/build.h"
+#include "quark/business/articles/channel.h"
+#include "quark/services/filesystem/filesystem.h"
+#include "quark/services/logger/logger.h"
 #include <boost/range/algorithm.hpp>
 #include <boost/url.hpp>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
-#include "quantum/build.h"
 #include <workflow/HttpMessage.h>
-#include "quantum/business/articles/channel.h"
-#include "quantum/services/filesystem/filesystem.h"
-#include "quantum/services/logger/logger.h"
+
+#include <quark/services/filesystem/filesystem.hpp>
+#include <quark/services/logger/logger.hpp>
 
 using json = nlohmann::json;
 
@@ -51,13 +54,13 @@ void pulsar::HandleChannels(WFHttpTask* httpTask)
     }
 
     std::ostringstream oss;
-    const std::string baseUrl = quantum::JoinFilePath({PROJECT_SOURCE_DIR, "assets", "data"});
-    auto channelServer = std::make_shared<quantum::ChannelServerBusiness>(baseUrl);
+    const std::string baseUrl = quark::JoinFilePath({"PROJECT_SOURCE_DIR", "assets", "data"});
+    auto channelServer = std::make_shared<quark::ChannelServerBusiness>(baseUrl);
     auto channelsPtr = channelServer->selectChannels();
     json range = json::array();
     for (const auto& model : *channelsPtr)
     {
-        quantum::Logger::LogInfo({model.URN, model.Name, model.Title});
+        quark::Logger::LogInfo({model.URN, model.Name, model.Title});
 
         json item = {
             {"urn", model.URN},

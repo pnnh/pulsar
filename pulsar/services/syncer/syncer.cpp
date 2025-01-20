@@ -1,16 +1,16 @@
 #include "syncer.h"
 
-#include <build.h>
-#include <iostream>
 #include <chrono>
+#include <iostream>
+#include <quark/business/articles/article.h>
+#include <quark/business/articles/channel.h>
+#include <quark/services/database/SqliteService.h>
+#include <quark/services/filesystem/filesystem.h>
+#include <quark/services/filesystem/filesystem.hpp>
+#include <quark/services/logger/logger.h>
 #include <thread>
-#include <quantum/services/database/SqliteService.h>
-#include <quantum/services/filesystem/filesystem.h>
-#include <quantum/services/logger/logger.h>
-#include <quantum/business/articles/article.h>
-#include <quantum/business/articles/channel.h>
 
-void initDatabase(quantum::SqliteService& sqliteService)
+void initDatabase(quark::SqliteService& sqliteService)
 {
     std::string initChannelsSqlText = R"sql(
         CREATE TABLE IF NOT EXISTS channels
@@ -47,10 +47,10 @@ void initDatabase(quantum::SqliteService& sqliteService)
     sqliteService.runSqlBatch(initSqlList);
 }
 
-void syncChannels(quantum::SqliteService& sqliteService)
+void syncChannels(quark::SqliteService& sqliteService)
 {
-    const std::string baseUrl = quantum::JoinFilePath({PROJECT_SOURCE_DIR, "assets", "data"});
-    auto channelServer = std::make_shared<quantum::ChannelServerBusiness>(baseUrl);
+    const std::string baseUrl = quark::JoinFilePath({"PROJECT_SOURCE_DIR", "assets", "data"});
+    auto channelServer = std::make_shared<quark::ChannelServerBusiness>(baseUrl);
     auto channelsPtr = channelServer->selectChannels();
 
     auto insertSqlText = R"sql(
@@ -68,7 +68,7 @@ void syncChannels(quantum::SqliteService& sqliteService)
 
     for (const auto& model : *channelsPtr)
     {
-        //quantum::Logger::LogInfo({model.URN, model.Name, model.Title});
+        //quark::Logger::LogInfo({model.URN, model.Name, model.Title});
 
         sqlCommand->BindString("$urn", model.URN);
         sqlCommand->BindString("$name", model.Name);
@@ -79,13 +79,13 @@ void syncChannels(quantum::SqliteService& sqliteService)
     }
 }
 
-void syncArticles(quantum::SqliteService& sqliteService)
+void syncArticles(quark::SqliteService& sqliteService)
 {
-    const std::string baseUrl = quantum::JoinFilePath({PROJECT_SOURCE_DIR, "assets", "data"});
+    const std::string baseUrl = quark::JoinFilePath({"PROJECT_SOURCE_DIR", "assets", "data"});
 
-    auto channelServer = std::make_shared<quantum::ChannelServerBusiness>(baseUrl);
+    auto channelServer = std::make_shared<quark::ChannelServerBusiness>(baseUrl);
 
-    auto articleServer = std::make_shared<quantum::ArticleFileService>(baseUrl);
+    auto articleServer = std::make_shared<quark::ArticleFileService>(baseUrl);
 
     auto insertSqlText = R"sql(
 INSERT INTO articles (urn, title, header, body, create_time, update_time, creator, keywords, description,
@@ -117,7 +117,7 @@ INSERT INTO articles (urn, title, header, body, create_time, update_time, creato
         auto articlesPtr = articleServer->scanArticles(chanModel.URN, chanModel.Path);
         for (const auto& noteModel : *articlesPtr)
         {
-            //quantum::Logger::LogInfo({noteModel.URN, noteModel.Title, noteModel.Title});
+            //quark::Logger::LogInfo({noteModel.URN, noteModel.Title, noteModel.Title});
 
             sqlCommand->BindString("$urn", noteModel.URN);
             sqlCommand->BindString("$title", noteModel.Title);
@@ -143,16 +143,16 @@ INSERT INTO articles (urn, title, header, body, create_time, update_time, creato
 void syncAllModels()
 {
     // 重新创建数据库链接以避免超时
-    auto database_path = quantum::JoinFilePath({PROJECT_BINARY_DIR, "polaris.sqlite"});
-    auto sqliteService = quantum::SqliteService(database_path);
+    auto database_path = quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
+    auto sqliteService = quark::SqliteService(database_path);
     syncChannels(sqliteService);
     syncArticles(sqliteService);
 }
 
 void pulsar::runSync()
 {
-    auto database_path = quantum::JoinFilePath({PROJECT_BINARY_DIR, "polaris.sqlite"});
-    auto sqliteService = quantum::SqliteService(database_path);
+    auto database_path = quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
+    auto sqliteService = quark::SqliteService(database_path);
     initDatabase(sqliteService);
     while (true)
     {

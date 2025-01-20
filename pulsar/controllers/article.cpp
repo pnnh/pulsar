@@ -1,16 +1,12 @@
 #include "pulsar/controllers/article.h"
+#include "quark/business/articles/article.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <nlohmann/json.hpp>
+#include <quark/services/filesystem/filesystem.hpp>
 #include <spdlog/spdlog.h>
 #include <workflow/HttpMessage.h>
 
-#include "quantum/utils/query.h"
-
-#include "quantum/business/articles/article.h"
-
-#include <build.h>
-#include "quantum/services/filesystem/filesystem.h"
-#include "quantum/services/logger/logger.h"
+#include <quark/types/query.h>
 
 using json = nlohmann::json;
 
@@ -25,7 +21,7 @@ void pulsar::HandleArticleGet(WFHttpTask* httpTask)
 
     auto request_uri = request->get_request_uri();
 
-    quantum::MTQueryString queryParam{std::string(request_uri)};
+    quark::MTQueryString queryParam{std::string(request_uri)};
 
     auto noteURN = queryParam.getString("note");
     if (!noteURN.has_value())
@@ -35,9 +31,9 @@ void pulsar::HandleArticleGet(WFHttpTask* httpTask)
     }
 
     std::ostringstream oss;
-    auto database_path = quantum::JoinFilePath({PROJECT_BINARY_DIR, "polaris.sqlite"});
+    auto database_path = quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
 
-    auto articleServer = std::make_shared<quantum::ArticleSqliteService>(database_path);
+    auto articleServer = std::make_shared<quark::ArticleSqliteService>(database_path);
     auto model = articleServer->getArticle(noteURN.value());
     if (model == nullptr)
     {
@@ -82,19 +78,19 @@ void pulsar::HandleArticles(WFHttpTask* httpTask)
 
     auto request_uri = request->get_request_uri();
 
-    quantum::MTQueryString queryParam{std::string(request_uri)};
+    quark::MTQueryString queryParam{std::string(request_uri)};
 
     auto chanURN = queryParam.getString("chan");
 
     std::ostringstream oss;
 
-    auto database_path = quantum::JoinFilePath({PROJECT_BINARY_DIR, "polaris.sqlite"});
-    auto articleServer = std::make_shared<quantum::ArticleSqliteService>(database_path);
+    auto database_path = quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
+    auto articleServer = std::make_shared<quark::ArticleSqliteService>(database_path);
     auto articlePtr = articleServer->selectArticles(chanURN.value_or(""));
     json range = json::array();
     for (const auto& model : *articlePtr)
     {
-        //quantum::Logger::LogInfo({model.URN, model.Title, model.Title});
+        //quark::Logger::LogInfo({model.URN, model.Title, model.Title});
         json item = {
             {"urn", model.URN},
             {"title", model.Title},

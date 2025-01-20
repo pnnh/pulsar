@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <regex>
-#include "quantum/types/String.h"
+#include "quark/types/String.h"
 
 #include "controllers/article.h"
 #include "controllers/channel.h"
@@ -13,27 +13,27 @@
 
 void routeHandleGet(WFHttpTask* httpTask, const std::string& request_uri)
 {
-	if (quantum::PSString::StartsWith(request_uri, "/sitemap"))
+	if (quark::PSString::StartsWith(request_uri, "/sitemap"))
 	{
 		pulsar::HandleSitemap(httpTask);
 	}
-	else if (quantum::PSString::StartsWith(request_uri, "/articles"))
+	else if (quark::PSString::StartsWith(request_uri, "/articles"))
 	{
 		pulsar::HandleArticles(httpTask);
 	}
-	else if (quantum::PSString::StartsWith(request_uri, "/channels"))
+	else if (quark::PSString::StartsWith(request_uri, "/channels"))
 	{
 		pulsar::HandleChannels(httpTask);
 	}
-	else if (quantum::PSString::StartsWith(request_uri, "/files"))
+	else if (quark::PSString::StartsWith(request_uri, "/files"))
 	{
 		pulsar::HandleFileList(httpTask);
 	}
-	else if (quantum::PSString::StartsWith(request_uri, "/articles/get"))
+	else if (quark::PSString::StartsWith(request_uri, "/articles/get"))
 	{
 		pulsar::HandleArticleGet(httpTask);
 	}
-	else if (quantum::PSString::StartsWith(request_uri, "/"))
+	else if (quark::PSString::StartsWith(request_uri, "/"))
 	{
 		pulsar::HandleIndex(httpTask);
 	}

@@ -1,12 +1,12 @@
 
 #include "mail.h"
-#include "server/services/config/appconfig.h"
-#include "common/utils/datetime.h"
 #include <date/date.h>
 #include <pqxx/pqxx>
+#include <pulsar/services/config/appconfig.h>
+#include <quark/types/datetime.hpp>
 #include <spdlog/spdlog.h>
 
-MailService::MailService() : connection(AppConfig::Default().GetDSN()) {
+MailService::MailService() : connection(pulsar::AppConfig::Default().GetDSN()) {
   if (!this->connection.is_open()) {
     throw std::runtime_error("Can't open database");
   }
@@ -14,8 +14,8 @@ MailService::MailService() : connection(AppConfig::Default().GetDSN()) {
 
 MailService::~MailService() { this->connection.close(); }
 
-std::optional<std::vector<MailModel>> MailService::selectMails(int limit) {
-  std::vector<MailModel> articlesList;
+std::optional<std::vector<MTMailModel>> MailService::selectMails(int limit) {
+  std::vector<MTMailModel> articlesList;
   const char *sqlText =
       "select  uid, title, content, create_time, update_time, "
       "creator, sender, receiver "
@@ -24,12 +24,12 @@ std::optional<std::vector<MailModel>> MailService::selectMails(int limit) {
   pqxx::result R(N.exec_params(sqlText, limit));
 
   for (pqxx::result::const_iterator itr = R.begin(); itr != R.end(); ++itr) {
-    auto model = MailModel{
+    auto model = MTMailModel{
         .uid = itr[0].as<std::string>(),
         .title = itr[1].as<std::string>(),
         .content = itr[2].as<std::string>(),
-        .create_time = makeTimePoint(itr[3].as<std::string>()),
-        .update_time = makeTimePoint(itr[4].as<std::string>()),
+        .create_time = quark::makeTimePoint(itr[3].as<std::string>()),
+        .update_time = quark::makeTimePoint(itr[4].as<std::string>()),
         .creator = itr[5].as<std::string>(),
         .sender = itr[6].as<std::string>(),
         .receiver = itr[7].as<std::string>(),
@@ -39,7 +39,7 @@ std::optional<std::vector<MailModel>> MailService::selectMails(int limit) {
   return articlesList;
 }
 
-std::optional<MailModel> MailService::findMail(const std::string &uid) {
+std::optional<MTMailModel> MailService::findMail(const std::string &uid) {
   const char *sqlText = "select uid, title, content, create_time, update_time, "
                         "creator, sender, receiver "
                         "from mails where uid = $1;";
@@ -47,12 +47,12 @@ std::optional<MailModel> MailService::findMail(const std::string &uid) {
   pqxx::result R(N.exec_params(sqlText, uid));
 
   for (pqxx::result::const_iterator itr = R.begin(); itr != R.end();) {
-    auto model = MailModel{
+    auto model = MTMailModel{
         .uid = itr[0].as<std::string>(),
         .title = itr[1].as<std::string>(),
         .content = itr[2].as<std::string>(),
-        .create_time = makeTimePoint(itr[3].as<std::string>()),
-        .update_time = makeTimePoint(itr[4].as<std::string>()),
+        .create_time = quark::makeTimePoint(itr[3].as<std::string>()),
+        .update_time = quark::makeTimePoint(itr[4].as<std::string>()),
         .creator = itr[5].as<std::string>(),
         .sender = itr[6].as<std::string>(),
         .receiver = itr[7].as<std::string>(),
@@ -62,7 +62,7 @@ std::optional<MailModel> MailService::findMail(const std::string &uid) {
   return std::nullopt;
 }
 
-int MailService::insertMail(const MailModel &model) {
+int MailService::insertMail(const MTMailModel &model) {
   const char *sqlText =
       "insert into mails (uid, title, content, create_time, update_time, "
       "creator, sender, receiver) "
@@ -81,7 +81,7 @@ int MailService::insertMail(const MailModel &model) {
   return 0;
 }
 
-int MailService::updateMail(const MailModel &model) {
+int MailService::updateMail(const MTMailModel &model) {
   const char *sqlText = "update mails set title = $1, content = $2, "
                         "update_time = $3, sender = $4, receiver = $5 "
                         "where uid = $6;";
