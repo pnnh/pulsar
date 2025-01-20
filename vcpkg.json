@@ -48,12 +48,13 @@
       "version>=": "0.10.9"
     }
   ],
-  "builtin-baseline": "9de2e978bdfec6bb7852cc1d6ecf375c923c485c",
   "overrides": [
     {
       "name": "fmt",
       "version": "9.1.0"
     },
+    { "name": "date", "version": "3.0.1" },
+    { "name": "folly", "version-string": "2024.01.01.00" },
     {
       "name": "spdlog",
       "version": "1.10.0"

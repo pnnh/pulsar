@@ -16,53 +16,30 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "/usr/bin/gcc-14",
         "CMAKE_CXX_COMPILER": "/usr/bin/g++-14",
-        "CMAKE_C_COMPILER_LAUNCHER": "ccache;distcc",
-        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache;distcc"
-      },
-      "environment": {}
-    },
-    {
-      "name": "clang",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-clang",
-      "installDir": "${sourceDir}/install-clang",
-      "toolchainFile": "/home/applications/vcpkg/scripts/buildsystems/vcpkg.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER": "/usr/bin/clang-18",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++-18",
-        "CMAKE_C_COMPILER_LAUNCHER": "ccache;distcc",
-        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache;distcc"
+        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
       },
       "environment": {}
     },
     {
       "name": "macos",
+      "displayName": "macOS Config",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-macos",
-      "installDir": "${sourceDir}/install-macos",
+      "binaryDir": "${sourceDir}/build/macos",
+      "installDir": "${sourceDir}/install/macos",
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "15.0",
+        "VCPKG_HOST_TRIPLET": "arm64-osx",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx",
+        "CMAKE_MAKE_PROGRAM": "ninja",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "/opt/homebrew/bin/ccache",
+        "CMAKE_C_COMPILER_LAUNCHER": "/opt/homebrew/bin/ccache",
         "CMAKE_C_COMPILER": "/opt/homebrew/opt/llvm/bin/clang",
-        "CMAKE_CXX_COMPILER": "/opt/homebrew/opt/llvm/bin/clang++",
-        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
-        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
-      },
-      "environment": {}
-    },
-    {
-      "name": "gcc",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-gcc",
-      "installDir": "${sourceDir}/install-gcc",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER": "$env{GCC}",
-        "CMAKE_CXX_COMPILER": "$env{GXX}",
-        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
-        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
+        "CMAKE_CXX_COMPILER": "/opt/homebrew/opt/llvm/bin/clang++"
       },
       "environment": {}
     }
@@ -73,16 +50,8 @@
       "configurePreset": "linux"
     },
     {
-      "name": "clang",
-      "configurePreset": "clang"
-    },
-    {
       "name": "macos",
       "configurePreset": "macos"
-    },
-    {
-      "name": "gcc",
-      "configurePreset": "gcc"
     }
   ],
   "testPresets": []
