@@ -2,16 +2,17 @@
 #include "quark/business/articles/article.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <nlohmann/json.hpp>
+#include <pulsar/router.h>
 #include <pulsar/services/business/article.hpp>
 #include <quark/services/filesystem/filesystem.hpp>
-#include <spdlog/spdlog.h>
 #include <workflow/HttpMessage.h>
 
 #include <quark/types/query.h>
 
 using json = nlohmann::json;
 
-void pulsar::HandleArticleGet(WFHttpTask *httpTask) {
+void pulsar::HandleArticleGet(WFHttpTask *httpTask,
+                              std::shared_ptr<PLRouteContext> routeContext) {
   protocol::HttpRequest *request = httpTask->get_req();
   protocol::HttpResponse *response = httpTask->get_resp();
 
@@ -19,39 +20,41 @@ void pulsar::HandleArticleGet(WFHttpTask *httpTask) {
   response->add_header_pair("Content-Type", "application/json; charset=utf-8");
   response->add_header_pair("Access-Control-Allow-Origin", "*");
 
-  auto request_uri = request->get_request_uri();
-
-  quark::MTQueryString queryParam{std::string(request_uri)};
-
-  auto noteURN = queryParam.getString("note");
-  if (!noteURN.has_value()) {
+  auto uid = routeContext->getParams("uid");
+  if (uid.empty()) {
     response->set_status_code("400");
     return;
   }
 
-  std::ostringstream oss;
-  auto database_path =
-      quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
+  auto request_uri = request->get_request_uri();
 
-  auto articleServer =
-      std::make_shared<quark::ArticleSqliteService>(database_path);
-  auto model = articleServer->getArticle(noteURN.value());
-  if (model == nullptr) {
+  quark::MTQueryString queryParam{std::string(request_uri)};
+
+  std::ostringstream oss;
+  // auto database_path =
+  //     quark::JoinFilePath({"PROJECT_BINARY_DIR", "polaris.sqlite"});
+  //
+  // auto articleServer =
+  //     std::make_shared<quark::ArticleSqliteService>(database_path);
+  // auto model = articleServer->getArticle(uid);
+  auto queryResult = pulsar::queryArticle(uid);
+  if (!queryResult.has_value()) {
     response->set_status_code("404");
     return;
   }
+  auto model = queryResult.value();
   json data = json::object({
       {"code", 200},
       {"message", "Hello, World!"},
       {"data", json::object({
-                   {"uid", model->Uid},
-                   {"title", model->Title},
-                   {"header", model->Header},
-                   {"body", model->Body},
-                   {"keywords", model->Keywords},
-                   {"description", model->Description},
-                   {"create_time", model->CreateTime.toString()},
-                   {"update_time", model->UpdateTime.toString()},
+                   {"uid", model.Uid},
+                   {"title", model.Title},
+                   {"header", model.Header},
+                   {"body", model.Body},
+                   {"keywords", model.Keywords},
+                   {"description", model.Description},
+                   {"create_time", model.CreateTime.toString()},
+                   {"update_time", model.UpdateTime.toString()},
                })},
   });
 
@@ -65,7 +68,8 @@ void pulsar::HandleArticleGet(WFHttpTask *httpTask) {
   response->set_status_code("200");
 }
 
-void pulsar::HandleArticles(WFHttpTask *httpTask) {
+void pulsar::HandleArticles(WFHttpTask *httpTask,
+                            std::shared_ptr<PLRouteContext> routeContext) {
   protocol::HttpRequest *request = httpTask->get_req();
   protocol::HttpResponse *response = httpTask->get_resp();
 

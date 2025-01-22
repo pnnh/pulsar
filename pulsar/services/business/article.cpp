@@ -10,7 +10,6 @@
 std::vector<quark::PSArticleModel> pulsar::selectArticles() {
   std::vector<quark::PSArticleModel> articlesList;
   auto pqDsn = AppConfig::Default().GetDSN();
-  std::cout << "pqDsn is: " << pqDsn << std::endl;
   try {
     pqxx::connection conn(pqDsn);
     if (conn.is_open()) {
@@ -63,19 +62,18 @@ std::vector<quark::PSArticleModel> pulsar::selectArticles() {
   return articlesList;
 }
 
-quark::PSArticleModel pulsar::queryArticle(std::string pk) {
-  auto pqDsn = "todo"; // GetConfigItem("DSN");
-  // std::cout << "pqDsn is: " << pqDsn << std::endl;
+std::optional<quark::PSArticleModel> pulsar::queryArticle(std::string uid) {
+  auto pqDsn = AppConfig::Default().GetDSN();
 
   pqxx::connection conn(pqDsn);
   if (conn.is_open()) {
     std::cout << "Opened database successfully: " << conn.dbname() << std::endl;
     const char *sqlText =
-        "select pk, title, body, create_time, update_time, creator, "
-        "keywords, description, mark_lang, status, mark_text from articles "
-        "where pk = $1 or uri = $1;";
+        "select uid, title, header, body, create_time, update_time, "
+        "keywords, description, status from articles "
+        "where uid = $1;";
     pqxx::nontransaction N(conn);
-    pqxx::result R(N.exec_params(sqlText, pk));
+    pqxx::result R(N.exec_params(sqlText, uid));
 
     for (pqxx::result::const_iterator itr = R.begin(); itr != R.end(); ++itr) {
       std::cout << "Pk = " << itr[0].as<std::string>() << std::endl;
@@ -93,6 +91,11 @@ quark::PSArticleModel pulsar::queryArticle(std::string pk) {
           // .mark_text = itr[10].as<std::string>(),
           // .status = itr[9].as<int>(),
       };
+      model.Uid = itr[0].as<std::string>();
+      model.Title = itr[1].as<std::string>();
+      model.Header = itr[2].as<std::string>();
+      model.Body = itr[3].as<std::string>();
+
       if (!itr[6].is_null()) {
         model.Keywords = itr[6].as<std::string>();
       }

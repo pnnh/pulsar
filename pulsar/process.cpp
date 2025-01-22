@@ -2,57 +2,63 @@
 
 #include <iostream>
 
-#include "pulsar/controllers/sitemap.h"
 #include "router.h"
-#include <workflow/HttpMessage.h>
-#include <workflow/HttpUtil.h>
-#include <workflow/WFHttpServer.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <spdlog/spdlog.h>
 #include <stdlib.h>
-#include <string.h>
 #include <string>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <workflow/WFHttpServer.h>
 
-void process(WFHttpTask* httpTask)
-{
-  pulsar::route_request(httpTask);
+void pulsar::PLServer::process(WFHttpTask *httpTask) {
+  protocol::HttpRequest *request = httpTask->get_req();
+  std::string request_uri = request->get_request_uri();
+  std::string request_method = request->get_method();
+
+  try {
+    this->router.Route(httpTask);
+  } catch (const std::exception &exception) {
+    std::cerr << "[" << request_method << " " << request_uri
+              << "] server exception: " << exception.what() << std::endl;
+    protocol::HttpResponse *response = httpTask->get_resp();
+    response->set_status_code("500");
+  }
 }
 
-void loopCmd(const WFHttpServer& httpServer)
-{
+void loopCmd() {
   std::string cmd;
-  while (true)
-  {
+  while (true) {
     std::cout << "等待操作命令..." << std::endl;
     std::getline(std::cin, cmd);
     std::cin.clear();
-    if (cmd == "exit")
-    {
+    if (cmd == "exit") {
       break;
     }
   }
 }
 
-int pulsar::runServer(int port)
-{
-  WFHttpServer server(process);
+pulsar::PLServer::PLServer(int port) : port(port) {
+  this->httpServer = std::make_unique<WFHttpServer>(
+      [this](WFHttpTask *httpTask) { this->process(httpTask); });
+}
 
-  if (port <= 0)
-    port = 8501;
-
-  if (server.start(port) == 0)
-  {
-    loopCmd(server);
-    server.stop();
+int pulsar::PLServer::runServer() {
+  if (port <= 0) {
+    constexpr int defaultPort = 8501;
+    port = defaultPort;
   }
-  else
-  {
+
+  if (this->httpServer->start(port) == 0) {
+    loopCmd();
+    this->httpServer->stop();
+  } else {
     perror("server start failed");
     exit(1);
   }
   return 0;
+}
+
+void pulsar::PLServer::Reg(
+    std::string method, const std::string &path,
+    void (*handler)(WFHttpTask *,
+                    std::shared_ptr<PLRouteContext> routeContext)) {
+  this->router.Reg(std::move(method), path, handler);
 }

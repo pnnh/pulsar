@@ -8,7 +8,7 @@
 namespace pulsar {
 
 std::vector<quark::PSArticleModel> selectArticles();
-quark::PSArticleModel queryArticle(std::string pk);
+std::optional<quark::PSArticleModel> queryArticle(std::string pk);
 
 class MessageService {
 public:
