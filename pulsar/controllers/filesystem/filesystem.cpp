@@ -2,7 +2,7 @@
 #include "quark/build.h"
 #include "quark/business/filesystem/file.hpp"
 #include "quark/services/filesystem/filesystem.h"
-#include "quark/types/String.h"
+#include "quark/types/string.hpp"
 #include "quark/utils/basex.h"
 #include <boost/range/algorithm.hpp>
 #include <boost/url.hpp>
