@@ -2,16 +2,15 @@
 
 #include <chrono>
 #include <iostream>
+#include <pulsar/business/articles/article.h>
+#include <pulsar/business/articles/channel.h>
 #include <pulsar/services/config/appconfig.h>
-#include <quark/business/articles/article.h>
-#include <quark/business/articles/channel.h>
-#include <quark/services/database/SqliteService.h>
+#include <quark/services/database/sqlite_service.h>
 #include <quark/services/filesystem/filesystem.h>
-#include <quark/services/filesystem/filesystem.hpp>
 #include <quark/services/logger/logger.h>
 #include <thread>
 
-void initDatabase(quark::SqliteService &sqliteService) {
+void initDatabase(quark::MTSqliteService &sqliteService) {
   std::string initChannelsSqlText = R"sql(
         CREATE TABLE IF NOT EXISTS channels
         (
@@ -47,12 +46,12 @@ void initDatabase(quark::SqliteService &sqliteService) {
   sqliteService.runSqlBatch(initSqlList);
 }
 
-void syncChannels(quark::SqliteService &sqliteService) {
+void syncChannels(quark::MTSqliteService &sqliteService) {
 
   auto sourcePath = pulsar::AppConfig::Default().GetSourcePath();
   const std::string baseUrl = quark::ResolvePath(sourcePath);
 
-  auto channelServer = std::make_shared<quark::ChannelServerBusiness>(baseUrl);
+  auto channelServer = std::make_shared<pulsar::ChannelServerBusiness>(baseUrl);
   auto channelsPtr = channelServer->selectChannels();
 
   auto insertSqlText = R"sql(
@@ -79,13 +78,13 @@ void syncChannels(quark::SqliteService &sqliteService) {
   }
 }
 
-void syncArticles(quark::SqliteService &sqliteService) {
+void syncArticles(quark::MTSqliteService &sqliteService) {
   auto sourcePath = pulsar::AppConfig::Default().GetSourcePath();
   const std::string baseUrl = quark::ResolvePath(sourcePath);
 
-  auto channelServer = std::make_shared<quark::ChannelServerBusiness>(baseUrl);
+  auto channelServer = std::make_shared<pulsar::ChannelServerBusiness>(baseUrl);
 
-  auto articleServer = std::make_shared<quark::ArticleFileService>(baseUrl);
+  auto articleServer = std::make_shared<pulsar::ArticleFileService>(baseUrl);
 
   auto insertSqlText = R"sql(
 INSERT INTO articles (urn, title, header, body, create_time, update_time, creator, keywords, description,
@@ -145,7 +144,7 @@ void syncAllModels() {
   auto targetPath = pulsar::AppConfig::Default().GetTargetPath();
   auto database_path =
       quark::JoinFilePath({quark::ResolvePath(targetPath), "polaris.sqlite"});
-  auto sqliteService = quark::SqliteService(database_path);
+  auto sqliteService = quark::MTSqliteService(database_path);
   syncChannels(sqliteService);
   syncArticles(sqliteService);
 }
@@ -154,11 +153,11 @@ void pulsar::runSync() {
   auto targetPath = AppConfig::Default().GetTargetPath();
   auto database_path =
       quark::JoinFilePath({quark::ResolvePath(targetPath), "polaris.sqlite"});
-  auto sqliteService = quark::SqliteService(database_path);
+  auto sqliteService = quark::MTSqliteService(database_path);
   initDatabase(sqliteService);
   while (true) {
     std::cout << "runSync" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     syncAllModels();
-    }
+  }
 }

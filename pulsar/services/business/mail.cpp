@@ -1,9 +1,10 @@
 
 #include "mail.h"
+#include "pulsar/business/models/channel/mail.hpp"
 #include <date/date.h>
 #include <pqxx/pqxx>
 #include <pulsar/services/config/appconfig.h>
-#include <quark/types/datetime.hpp>
+#include <quark/core/types/datetime.h>
 #include <spdlog/spdlog.h>
 
 MailService::MailService() : connection(pulsar::AppConfig::Default().GetDSN()) {

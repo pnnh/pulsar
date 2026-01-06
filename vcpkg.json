@@ -8,8 +8,25 @@
       "version>=": "1.9.0"
     },
     {
-      "name": "boost",
-      "version>=": "1.84.0"
+      "name": "boost-system"
+    },
+    {
+      "name": "boost-thread"
+    },
+    {
+      "name": "boost-chrono"
+    },
+    {
+      "name": "boost-filesystem"
+    },
+    {
+      "name": "boost-url"
+    },
+    {
+      "name": "boost-property-tree"
+    },
+    {
+      "name": "boost-uuid"
     },
     {
       "name": "inja",
@@ -46,6 +63,9 @@
     {
       "name": "workflow",
       "version>=": "0.10.9"
+    },
+    {
+      "name": "yaml-cpp"
     }
   ],
   "overrides": [
@@ -53,8 +73,14 @@
       "name": "fmt",
       "version": "9.1.0"
     },
-    { "name": "date", "version": "3.0.1" },
-    { "name": "folly", "version-string": "2024.01.01.00" },
+    {
+      "name": "date",
+      "version": "3.0.1"
+    },
+    {
+      "name": "folly",
+      "version-string": "2024.01.01.00"
+    },
     {
       "name": "spdlog",
       "version": "1.10.0"

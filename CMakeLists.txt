@@ -18,14 +18,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${PROJECT_BINARY_DIR})
 link_directories(${PROJECT_BINARY_DIR})
 
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-
 set(APP_NAME MTPulsar)
 
 add_executable(${APP_NAME})
 
-file(GLOB_RECURSE APP_SOURCES pulsar/*.cpp quark/*.cpp)
+file(GLOB_RECURSE APP_SOURCES pulsar/*.cpp
+        quark/core/*.cpp
+        quark/infra/*.cpp
+        quark/services/*.cpp)
 
 target_sources(${APP_NAME} PUBLIC ${APP_SOURCES})
 
@@ -38,6 +38,9 @@ target_sources(${APP_NAME}
 )
 
 # 查找并引用Boost库
+set(Boost_NO_BOOST_CMAKE ON)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
 find_package(Boost COMPONENTS system thread chrono filesystem url REQUIRED)
 target_include_directories(${APP_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(${APP_NAME} PRIVATE ${Boost_LIBRARIES})

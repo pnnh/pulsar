@@ -1,9 +1,9 @@
 
 #include "pulsar/services/config/appconfig.h"
+#include "quark/infra/utils/md5.h"
 #include <cstdio>
 #include <cstdlib>
 #include <string>
-#include "quark/utils/md5.h"
 
 int TestMd5() {
   std::string content = "hello world";

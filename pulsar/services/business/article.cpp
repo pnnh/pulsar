@@ -1,14 +1,14 @@
 #include "article.hpp"
 #include "pulsar/services/config/appconfig.h"
 #include <date/date.h>
-#include <quark/models/articles/Article.h>
-#include <quark/types/uuid.h>
+#include <pulsar/business/models/articles/article.h>
+#include <quark/core/uuid/uuid.h>
 
 #include <iostream>
 #include <pqxx/pqxx>
 
-std::vector<quark::PSArticleModel> pulsar::selectArticles() {
-  std::vector<quark::PSArticleModel> articlesList;
+std::vector<pulsar::PSArticleModel> pulsar::selectArticles() {
+  std::vector<pulsar::PSArticleModel> articlesList;
   auto pqDsn = AppConfig::Default().GetDSN();
   try {
     pqxx::connection conn(pqDsn);
@@ -26,7 +26,7 @@ std::vector<quark::PSArticleModel> pulsar::selectArticles() {
            ++itr) {
         // std::cout << "Pk = " << itr[0].as<std::string>() << std::endl;
         // std::cout << "Title = " << itr[1].as<std::string>() << std::endl;
-        auto model = quark::PSArticleModel{
+        auto model = pulsar::PSArticleModel{
             //            .title = itr[1].as<std::string>(),
             //            .body = itr[2].as<std::string>(),
             //            .create_time =
@@ -62,7 +62,7 @@ std::vector<quark::PSArticleModel> pulsar::selectArticles() {
   return articlesList;
 }
 
-std::optional<quark::PSArticleModel> pulsar::queryArticle(std::string uid) {
+std::optional<pulsar::PSArticleModel> pulsar::queryArticle(std::string uid) {
   auto pqDsn = AppConfig::Default().GetDSN();
 
   pqxx::connection conn(pqDsn);
@@ -78,7 +78,7 @@ std::optional<quark::PSArticleModel> pulsar::queryArticle(std::string uid) {
     for (pqxx::result::const_iterator itr = R.begin(); itr != R.end(); ++itr) {
       std::cout << "Pk = " << itr[0].as<std::string>() << std::endl;
       std::cout << "Title = " << itr[1].as<std::string>() << std::endl;
-      auto model = quark::PSArticleModel{
+      auto model = pulsar::PSArticleModel{
           // .pk = itr[0].as<std::string>(),
           // .title = itr[1].as<std::string>(),
           // .body = itr[2].as<std::string>(),
@@ -119,9 +119,9 @@ pulsar::MessageService::MessageService()
   }
 }
 
-std::optional<std::vector<quark::PSArticleModel>>
+std::optional<std::vector<pulsar::PSArticleModel>>
 pulsar::MessageService::selectMessages(int limit) {
-  std::vector<quark::PSArticleModel> articlesList;
+  std::vector<pulsar::PSArticleModel> articlesList;
   const char *sqlText = "select uid, nid, title, header, body, keywords, "
                         "description, create_time, update_time "
                         "from posts order by update_time desc limit $1;";
@@ -129,7 +129,7 @@ pulsar::MessageService::selectMessages(int limit) {
   pqxx::result R(N.exec_params(sqlText, limit));
 
   for (pqxx::result::const_iterator itr = R.begin(); itr != R.end(); ++itr) {
-    auto model = quark::PSArticleModel{
+    auto model = pulsar::PSArticleModel{
         // .uid = itr[0].as<std::string>(),
         // .nid = itr[1].as<long>(),
         // .title = itr[2].as<std::string>(),
@@ -145,7 +145,7 @@ pulsar::MessageService::selectMessages(int limit) {
   return articlesList;
 }
 
-std::optional<quark::PSArticleModel>
+std::optional<pulsar::PSArticleModel>
 pulsar::MessageService::findMessage(const std::optional<std::string> &uid,
                                     const std::optional<long> &nid) {
   std::string sqlText = "select uid, nid, title, header, body, keywords, "
@@ -167,7 +167,7 @@ pulsar::MessageService::findMessage(const std::optional<std::string> &uid,
   pqxx::result R(N.exec_params(sqlText, pk));
 
   for (pqxx::result::const_iterator itr = R.begin(); itr != R.end();) {
-    auto model = quark::PSArticleModel{
+    auto model = pulsar::PSArticleModel{
         // .uid = itr[0].as<std::string>(),
         // .nid = itr[1].as<long>(),
         // .title = itr[2].as<std::string>(),
@@ -183,7 +183,7 @@ pulsar::MessageService::findMessage(const std::optional<std::string> &uid,
   return std::nullopt;
 }
 
-int pulsar::MessageService::insertMessage(const quark::PSArticleModel &model) {
+int pulsar::MessageService::insertMessage(const pulsar::PSArticleModel &model) {
   const char *sqlText =
       "insert into messages (uid, title, content, create_time, update_time, "
       "creator, sender, receiver) "
@@ -204,7 +204,7 @@ int pulsar::MessageService::insertMessage(const quark::PSArticleModel &model) {
   return 0;
 }
 
-int pulsar::MessageService::updateMessage(const quark::PSArticleModel &model) {
+int pulsar::MessageService::updateMessage(const pulsar::PSArticleModel &model) {
   const char *sqlText = "update messages set title = $1, content = $2, "
                         "update_time = $3, sender = $4, receiver = $5 "
                         "where uid = $6;";

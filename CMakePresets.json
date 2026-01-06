@@ -39,7 +39,10 @@
         "CMAKE_CXX_COMPILER_LAUNCHER": "/opt/homebrew/bin/ccache",
         "CMAKE_C_COMPILER_LAUNCHER": "/opt/homebrew/bin/ccache",
         "CMAKE_C_COMPILER": "/opt/homebrew/opt/llvm/bin/clang",
-        "CMAKE_CXX_COMPILER": "/opt/homebrew/opt/llvm/bin/clang++"
+        "CMAKE_CXX_COMPILER": "/opt/homebrew/opt/llvm/bin/clang++",
+        "CMAKE_OSX_SYSROOT": "macosx",
+        "CMAKE_C_FLAGS": "-mmacosx-version-min=15.0",
+        "CMAKE_CXX_FLAGS": "-mmacosx-version-min=15.0"
       },
       "environment": {}
     }

@@ -1,13 +1,13 @@
 #include "pulsar/controllers/article.h"
-#include "quark/business/articles/article.h"
+#include "pulsar/business/articles/article.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <nlohmann/json.hpp>
 #include <pulsar/router.h>
 #include <pulsar/services/business/article.hpp>
-#include <quark/services/filesystem/filesystem.hpp>
+#include <quark/services/filesystem/filesystem.h>
 #include <workflow/HttpMessage.h>
 
-#include <quark/types/query.h>
+#include <quark/infra/http/query.h>
 
 using json = nlohmann::json;
 

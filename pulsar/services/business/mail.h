@@ -1,27 +1,27 @@
 #pragma once
+#include "pulsar/business/models/channel/mail.hpp"
 #include <optional>
-#include <vector>
 #include <pqxx/pqxx>
-#include "quark/models/channel/mail.hpp"
+#include <vector>
 
 class MailService {
 public:
-    MailService();
+  MailService();
 
-    ~MailService();
+  ~MailService();
 
-    std::optional<std::vector<MTMailModel>> selectMails(int limit);
+  std::optional<std::vector<MTMailModel>> selectMails(int limit);
 
-    int insertMail(const MTMailModel &model);
+  int insertMail(const MTMailModel &model);
 
-    int updateMail(const MTMailModel &model);
+  int updateMail(const MTMailModel &model);
 
-    int deleteMail(const std::string &pk);
+  int deleteMail(const std::string &pk);
 
-    std::optional<MTMailModel> findMail(const std::string &pk);
+  std::optional<MTMailModel> findMail(const std::string &pk);
 
-    long count();
+  long count();
 
 private:
-    pqxx::connection connection;
+  pqxx::connection connection;
 };

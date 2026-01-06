@@ -1,6 +1,6 @@
 #include "router.h"
 
-#include "quark/types/string.hpp"
+#include "quark/core/string//string.h"
 #include <iostream>
 #include <regex>
 
@@ -9,20 +9,18 @@
 #include "controllers/filesystem/filesystem.h"
 #include "controllers/index.h"
 #include "controllers/sitemap.h"
-
-#include <quark/types/Exception.h>
-#include <quark/types/query.h>
+#include <quark/infra/http/query.h>
 
 void routeHandleGet(WFHttpTask *httpTask, const std::string &request_uri) {
   auto queryParam = quark::MTQueryString{request_uri};
   auto routePath = queryParam.getPath();
-  if (quark::PSString::StartsWith(request_uri, "/sitemap")) {
+  if (quark::MTString::StartsWith(request_uri, "/sitemap")) {
     pulsar::HandleSitemap(httpTask);
-  } else if (quark::PSString::StartsWith(request_uri, "/channels")) {
+  } else if (quark::MTString::StartsWith(request_uri, "/channels")) {
     pulsar::HandleChannels(httpTask);
-  } else if (quark::PSString::StartsWith(request_uri, "/files")) {
+  } else if (quark::MTString::StartsWith(request_uri, "/files")) {
     pulsar::HandleFileList(httpTask);
-  } else if (quark::PSString::StartsWith(request_uri, "/")) {
+  } else if (quark::MTString::StartsWith(request_uri, "/")) {
     pulsar::HandleIndex(httpTask);
   } else {
     protocol::HttpResponse *response = httpTask->get_resp();
@@ -51,7 +49,7 @@ char pulsar::PLRoute::matchDir(const std::string &routeDir,
                                const std::string &queryDir,
                                std::shared_ptr<PLRouteContext> routeContext) {
   // 匹配到路由参数
-  if (quark::PSString::StartsWith(routeDir, ":")) {
+  if (quark::MTString::StartsWith(routeDir, ":")) {
     auto paramName = routeDir.substr(1);
     routeContext->setParams(paramName, queryDir);
     return '2'; // 参数
@@ -75,11 +73,11 @@ int pulsar::PLRoute::parseRouteParams(
     const std::string &queryPath,
     std::shared_ptr<PLRouteContext> routeContext) {
   auto routePath = this->routePath;
-  auto newRoutePath = quark::PSString::trimAll(routePath, "/");
-  auto routeSplit = quark::PSString::SplitString(newRoutePath, "/");
+  auto newRoutePath = quark::MTString::trimAll(routePath, "/");
+  auto routeSplit = quark::MTString::SplitString(newRoutePath, "/");
 
-  auto newQueryPath = quark::PSString::trimAll(queryPath, "/");
-  auto querySplit = quark::PSString::SplitString(newQueryPath, "/");
+  auto newQueryPath = quark::MTString::trimAll(queryPath, "/");
+  auto querySplit = quark::MTString::SplitString(newQueryPath, "/");
   if (routeSplit.size() != querySplit.size()) {
     return 0; // 不匹配
   }
